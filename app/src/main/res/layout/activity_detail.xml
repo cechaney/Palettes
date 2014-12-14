@@ -1,0 +1,100 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/detailRoot"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.spm.palettes.DetailActivity">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/imgView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@color/black"
+            android:scaleType="centerCrop"
+            android:clickable="true"
+            android:onClick="zoomImage"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/palContainer"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/palRow1"
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/cell1"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black"/>
+
+            <ImageView
+                android:id="@+id/cell2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/white"/>
+
+            <ImageView
+                android:id="@+id/cell3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black"/>
+
+            <ImageView
+                android:id="@+id/cell4"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/white"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/palRow2"
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/cell5"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/white"/>
+
+            <ImageView
+                android:id="@+id/cell6"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black"/>
+
+            <ImageView
+                android:id="@+id/cell7"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/white"/>
+
+            <ImageView
+                android:id="@+id/cell8"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

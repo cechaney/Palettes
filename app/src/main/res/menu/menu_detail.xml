@@ -1,0 +1,12 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.spm.palettes.DetailActivity">
+
+    <item
+        android:id="@+id/save_palette"
+        android:icon="@drawable/ic_action_save"
+        android:title="Save Palette To Gallery"
+        android:showAsAction="ifRoom"/>
+
+</menu>
