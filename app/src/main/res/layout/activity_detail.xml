@@ -29,37 +29,36 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:background="@color/black">
 
         <LinearLayout
             android:id="@+id/palRow1"
             android:orientation="horizontal"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="fill_parent"
+            android:layout_weight="1">
 
             <ImageView
                 android:id="@+id/cell1"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
                 android:background="@color/black"/>
 
             <ImageView
                 android:id="@+id/cell2"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
                 android:background="@color/white"/>
 
             <ImageView
                 android:id="@+id/cell3"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
                 android:background="@color/black"/>
-
-            <ImageView
-                android:id="@+id/cell4"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@color/white"/>
 
         </LinearLayout>
 
@@ -67,31 +66,29 @@
             android:id="@+id/palRow2"
             android:orientation="horizontal"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="fill_parent"
+            android:layout_weight="1">
+
+            <ImageView
+                android:id="@+id/cell4"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:background="@color/white"/>
 
             <ImageView
                 android:id="@+id/cell5"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@color/white"/>
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:background="@color/black"/>
 
             <ImageView
                 android:id="@+id/cell6"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@color/black"/>
-
-            <ImageView
-                android:id="@+id/cell7"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
                 android:background="@color/white"/>
-
-            <ImageView
-                android:id="@+id/cell8"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@color/black"/>
 
         </LinearLayout>
 
