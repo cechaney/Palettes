@@ -22,13 +22,18 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DetailActivity extends Activity {
 
-    private final Activity detailActivity = this;
+    private final WeakReference<DetailActivity> weakDetailActivity;
+
+    public DetailActivity() {
+        this.weakDetailActivity = new WeakReference<>(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +42,7 @@ public class DetailActivity extends Activity {
 
         setContentView(R.layout.activity_detail);
 
-        LinearLayout detailRoot = (LinearLayout) detailActivity.findViewById(R.id.detailRoot);
+        LinearLayout detailRoot = (LinearLayout) this.findViewById(R.id.detailRoot);
 
         ActionBar actionBar = this.getActionBar();
 
@@ -55,13 +60,15 @@ public class DetailActivity extends Activity {
             }
         }
 
-        final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
+        final ProgressDialog progDiag = ProgressDialog.show(this, "Palettes", "Loading palette...", true, true);
 
         Thread loadThread = new Thread() {
             @Override
             public void run() {
 
-                ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
+                final DetailActivity detailActivity = weakDetailActivity.get();
+
+                ImageView imgView = (ImageView) weakDetailActivity.get().findViewById(R.id.imgView);
 
                 List<ImageView> cells = new ArrayList<>();
 
@@ -110,7 +117,7 @@ public class DetailActivity extends Activity {
                     detailActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            progDiag.hide();
+                            progDiag.dismiss();
                         }
                     });
 
@@ -125,7 +132,7 @@ public class DetailActivity extends Activity {
 
     public void zoomImage(View view) {
 
-        ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
+        ImageView imgView = (ImageView) this.findViewById(R.id.imgView);
 
         if (ImageView.ScaleType.CENTER_CROP.equals(imgView.getScaleType())) {
             imgView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -153,6 +160,8 @@ public class DetailActivity extends Activity {
     }
 
     private void savePalette() {
+
+        final DetailActivity detailActivity = weakDetailActivity.get();
 
         final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
 
@@ -222,7 +231,7 @@ public class DetailActivity extends Activity {
                     detailActivity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            progDiag.hide();
+                            progDiag.dismiss();
                         }
                     });
                 }
