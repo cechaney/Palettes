@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.support.v7.graphics.Palette;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
@@ -38,27 +39,21 @@ public class DetailActivity extends Activity {
 
     private final Activity detailActivity = this;
 
-    private ImageView imgView;
-    private String imageName;
-    private LinearLayout palContainer;
-    private List<ImageView> cells;
-
-    private LinearLayout detailRoot;
     private OrientationEventListener oel;
 
     private ProgressDialog progDiag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_detail);
+
+        LinearLayout detailRoot = (LinearLayout) detailActivity.findViewById(R.id.detailRoot);
 
         ActionBar actionBar = this.getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-
-        imgView = (ImageView) this.findViewById(R.id.imgView);
-        palContainer = (LinearLayout) this.findViewById(R.id.palContainer);
-        detailRoot = (LinearLayout) this.findViewById(R.id.detailRoot);
 
         Configuration config = this.getResources().getConfiguration();
 
@@ -68,61 +63,79 @@ public class DetailActivity extends Activity {
             detailRoot.setOrientation(LinearLayout.VERTICAL);
         }
 
-        cells = new ArrayList<>();
+        final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
 
-        cells.add((ImageView) this.findViewById(R.id.cell1));
-        cells.add((ImageView) this.findViewById(R.id.cell2));
-        cells.add((ImageView) this.findViewById(R.id.cell3));
-        cells.add((ImageView) this.findViewById(R.id.cell4));
-        cells.add((ImageView) this.findViewById(R.id.cell5));
-        cells.add((ImageView) this.findViewById(R.id.cell6));
+        Thread loadThread = new Thread() {
+            @Override
+            public void run() {
 
-        String imageUriString = this.getIntent().getStringExtra(EXTRAS.IMAGE_URI);
-        Uri imageUri = Uri.parse(imageUriString);
-        imgView.setImageURI(imageUri);
-        Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
+                ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
+                LinearLayout palContainer = (LinearLayout) detailActivity.findViewById(R.id.palContainer);
+                List<ImageView> cells = new ArrayList<>();
 
-        imageName = this.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+                try {
 
-        progDiag = ProgressDialog.show(this, "Palettes", "Loading palette...", true, true);
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell1));
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell2));
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell3));
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell4));
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell5));
+                    cells.add((ImageView) detailActivity.findViewById(R.id.cell6));
 
-        Palette.generateAsync(bitmap,
-                new Palette.PaletteAsyncListener() {
-                    @Override
-                    public void onGenerated(Palette palette) {
+                    String imageUriString = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_URI);
 
-                        try{
+                    Uri imageUri = Uri.parse(imageUriString);
 
-                            cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
-                            cells.get(1).setBackgroundColor(palette.getLightVibrantColor(0));
-                            cells.get(2).setBackgroundColor(palette.getDarkVibrantColor(0));
-                            cells.get(3).setBackgroundColor(palette.getMutedColor(0));
-                            cells.get(4).setBackgroundColor(palette.getLightMutedColor(0));
-                            cells.get(5).setBackgroundColor(palette.getDarkMutedColor(0));
+                    imgView.setImageURI(imageUri);
 
-                        } catch(Exception ex){
-                            detailActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
 
-                                    Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
+                    String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
 
-                                    failed.show();
-                                }
-                            });
-                        } finally{
+                    Palette palette = Palette.generate(bitmap);
+
+                    cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
+                    cells.get(1).setBackgroundColor(palette.getLightVibrantColor(0));
+                    cells.get(2).setBackgroundColor(palette.getDarkVibrantColor(0));
+                    cells.get(3).setBackgroundColor(palette.getMutedColor(0));
+                    cells.get(4).setBackgroundColor(palette.getLightMutedColor(0));
+                    cells.get(5).setBackgroundColor(palette.getDarkMutedColor(0));
+
+                } catch(Exception ex){
+
+                    Log.e("Palettes","Load palette failed",ex);
+
+                    detailActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
+
+                            failed.show();
+                        }
+                    });
+
+                } finally{
+
+                    detailActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
                             progDiag.hide();
                         }
+                    });
 
+                }
 
+            }
+        };
 
-
-                    }
-                });
+        loadThread.start();
 
     }
 
     public void zoomImage(View view) {
+
+        ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
 
         if (ImageView.ScaleType.CENTER_CROP.equals(imgView.getScaleType())) {
             imgView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -151,17 +164,19 @@ public class DetailActivity extends Activity {
 
     private void savePalette() {
 
-        final View detailRoot = findViewById(R.id.detailRoot);
+        final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
 
-        detailRoot.setDrawingCacheEnabled(true);
-
-        final Bitmap bitMap = detailRoot.getDrawingCache();
-
-        progDiag = ProgressDialog.show(this, "Palettes", "Saving palette...", true, true);
-
-        Thread mThread = new Thread() {
+        Thread saveThread = new Thread() {
             @Override
             public void run() {
+
+                View detailRoot = findViewById(R.id.detailRoot);
+
+                detailRoot.setDrawingCacheEnabled(true);
+
+                Bitmap bitMap = detailRoot.getDrawingCache();
+
+                String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
 
                 try {
 
@@ -211,13 +226,18 @@ public class DetailActivity extends Activity {
                     });
 
                 } finally{
-                    progDiag.dismiss();
+                    detailActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            progDiag.hide();
+                        }
+                    });
                 }
 
             }
         };
 
-        mThread.start();
+        saveThread.start();
 
     }
 }
