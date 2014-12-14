@@ -77,13 +77,6 @@ public class DetailActivity extends Activity {
         cells.add((ImageView) this.findViewById(R.id.cell5));
         cells.add((ImageView) this.findViewById(R.id.cell6));
 
-//        for(ImageView cell: cells){
-//            android.view.ViewGroup.LayoutParams layoutParams = cell.getLayoutParams();
-//            layoutParams.width = palContainer.getWidth() / 3;
-//            layoutParams.height = palContainer.getHeight() / 2;
-//            cell.setLayoutParams(layoutParams);
-//        }
-
         String imageUriString = this.getIntent().getStringExtra(EXTRAS.IMAGE_URI);
         Uri imageUri = Uri.parse(imageUriString);
         imgView.setImageURI(imageUri);
