@@ -3,27 +3,18 @@ package com.spm.palettes;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.GradientDrawable;
-import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.OpenableColumns;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.OrientationEventListener;
 import android.view.View;
-import android.widget.GridLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -39,10 +30,6 @@ public class DetailActivity extends Activity {
 
     private final Activity detailActivity = this;
 
-    private OrientationEventListener oel;
-
-    private ProgressDialog progDiag;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -53,14 +40,19 @@ public class DetailActivity extends Activity {
         LinearLayout detailRoot = (LinearLayout) detailActivity.findViewById(R.id.detailRoot);
 
         ActionBar actionBar = this.getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        if(actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         Configuration config = this.getResources().getConfiguration();
 
-        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            detailRoot.setOrientation(LinearLayout.HORIZONTAL);
-        } else if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            detailRoot.setOrientation(LinearLayout.VERTICAL);
+        if(config != null){
+            if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                detailRoot.setOrientation(LinearLayout.HORIZONTAL);
+            } else if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                detailRoot.setOrientation(LinearLayout.VERTICAL);
+            }
         }
 
         final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
@@ -70,7 +62,7 @@ public class DetailActivity extends Activity {
             public void run() {
 
                 ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
-                LinearLayout palContainer = (LinearLayout) detailActivity.findViewById(R.id.palContainer);
+
                 List<ImageView> cells = new ArrayList<>();
 
                 try {
@@ -90,8 +82,6 @@ public class DetailActivity extends Activity {
 
                     Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
 
-                    String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
-
                     Palette palette = Palette.generate(bitmap);
 
                     cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
@@ -103,7 +93,7 @@ public class DetailActivity extends Activity {
 
                 } catch(Exception ex){
 
-                    Log.e("Palettes","Load palette failed",ex);
+                    Log.e(detailActivity.getPackageName(),"Load palette failed",ex);
 
                     detailActivity.runOnUiThread(new Runnable() {
                         @Override
@@ -176,17 +166,18 @@ public class DetailActivity extends Activity {
 
                 Bitmap bitMap = detailRoot.getDrawingCache();
 
-                String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+                final String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+                final String filename = "/palette_" + imageName + ".png";
+                final String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + filename;
 
                 try {
-
-                    final String filename = "/palette_" + imageName + ".png";
-                    final String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + filename;
 
                     File imageFile = new File(filePath);
 
                     if (imageFile.exists()) {
-                        imageFile.delete();
+                        if(imageFile.delete()){
+                            Log.i(detailActivity.getPackageName(),"File " + filePath + "overwritten");
+                        }
                     }
 
                     FileOutputStream fos = new FileOutputStream(imageFile);
@@ -214,6 +205,8 @@ public class DetailActivity extends Activity {
 
 
                 } catch (IOException ioe) {
+
+                    Log.e(detailActivity.getPackageName(),"Palette save failed");
 
                     detailActivity.runOnUiThread(new Runnable() {
                         @Override
