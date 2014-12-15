@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.graphics.Palette;
@@ -60,73 +61,7 @@ public class DetailActivity extends Activity {
             }
         }
 
-        final ProgressDialog progDiag = ProgressDialog.show(this, "Palettes", "Loading palette...", true, true);
-
-        Thread loadThread = new Thread() {
-            @Override
-            public void run() {
-
-                final DetailActivity detailActivity = weakDetailActivity.get();
-
-                ImageView imgView = (ImageView) weakDetailActivity.get().findViewById(R.id.imgView);
-
-                List<ImageView> cells = new ArrayList<>();
-
-                try {
-
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell1));
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell2));
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell3));
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell4));
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell5));
-                    cells.add((ImageView) detailActivity.findViewById(R.id.cell6));
-
-                    String imageUriString = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_URI);
-
-                    Uri imageUri = Uri.parse(imageUriString);
-
-                    imgView.setImageURI(imageUri);
-
-                    Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
-
-                    Palette palette = Palette.generate(bitmap);
-
-                    cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
-                    cells.get(1).setBackgroundColor(palette.getLightVibrantColor(0));
-                    cells.get(2).setBackgroundColor(palette.getDarkVibrantColor(0));
-                    cells.get(3).setBackgroundColor(palette.getMutedColor(0));
-                    cells.get(4).setBackgroundColor(palette.getLightMutedColor(0));
-                    cells.get(5).setBackgroundColor(palette.getDarkMutedColor(0));
-
-                } catch(Exception ex){
-
-                    Log.e(detailActivity.getPackageName(),"Load palette failed",ex);
-
-                    detailActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
-
-                            failed.show();
-                        }
-                    });
-
-                } finally{
-
-                    detailActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progDiag.dismiss();
-                        }
-                    });
-
-                }
-
-            }
-        };
-
-        loadThread.start();
+        new LoadTask().execute();
 
     }
 
@@ -161,85 +96,249 @@ public class DetailActivity extends Activity {
 
     private void savePalette() {
 
-        final DetailActivity detailActivity = weakDetailActivity.get();
+        new SaveTask().execute();
 
-        final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
+//        final DetailActivity detailActivity = weakDetailActivity.get();
+//
+//        final ProgressDialog progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
+//
+//        Thread saveThread = new Thread() {
+//            @Override
+//            public void run() {
+//
+//                View detailRoot = findViewById(R.id.detailRoot);
+//
+//                detailRoot.setDrawingCacheEnabled(true);
+//
+//                Bitmap bitMap = detailRoot.getDrawingCache();
+//
+//                final String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+//                final String filename = "/palette_" + imageName + ".png";
+//                final String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + filename;
+//
+//                try {
+//
+//                    File imageFile = new File(filePath);
+//
+//                    if (imageFile.exists()) {
+//                        if(imageFile.delete()){
+//                            Log.i(detailActivity.getPackageName(),"File " + filePath + "overwritten");
+//                        }
+//                    }
+//
+//                    FileOutputStream fos = new FileOutputStream(imageFile);
+//                    bitMap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+//
+//                    fos.flush();
+//                    fos.close();
+//
+//                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//
+//                    Uri contentUri = Uri.fromFile(imageFile);
+//                    mediaScanIntent.setData(contentUri);
+//
+//                    detailActivity.sendBroadcast(mediaScanIntent);
+//
+//                    detailActivity.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                            Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + filename, Toast.LENGTH_LONG);
+//
+//                            confirm.show();
+//                        }
+//                    });
+//
+//
+//                } catch (IOException ioe) {
+//
+//                    Log.e(detailActivity.getPackageName(),"Palette save failed");
+//
+//                    detailActivity.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                            Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
+//
+//                            failed.show();
+//                        }
+//                    });
+//
+//                } finally{
+//                    detailActivity.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            progDiag.dismiss();
+//                        }
+//                    });
+//                }
+//
+//            }
+//        };
+//
+//        saveThread.start();
 
-        Thread saveThread = new Thread() {
-            @Override
-            public void run() {
+    }
 
-                View detailRoot = findViewById(R.id.detailRoot);
+    private class LoadTask extends AsyncTask<String, Boolean, Boolean> {
 
-                detailRoot.setDrawingCacheEnabled(true);
+        private ProgressDialog progDiag;
+        private DetailActivity detailActivity;
 
-                Bitmap bitMap = detailRoot.getDrawingCache();
+        @Override
+        protected void onPreExecute() {
 
-                final String imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
-                final String filename = "/palette_" + imageName + ".png";
-                final String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + filename;
+            super.onPreExecute();
 
-                try {
+            detailActivity = weakDetailActivity.get();
 
-                    File imageFile = new File(filePath);
-
-                    if (imageFile.exists()) {
-                        if(imageFile.delete()){
-                            Log.i(detailActivity.getPackageName(),"File " + filePath + "overwritten");
-                        }
-                    }
-
-                    FileOutputStream fos = new FileOutputStream(imageFile);
-                    bitMap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-
-                    fos.flush();
-                    fos.close();
-
-                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-
-                    Uri contentUri = Uri.fromFile(imageFile);
-                    mediaScanIntent.setData(contentUri);
-
-                    detailActivity.sendBroadcast(mediaScanIntent);
-
-                    detailActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + filename, Toast.LENGTH_LONG);
-
-                            confirm.show();
-                        }
-                    });
+            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
 
 
-                } catch (IOException ioe) {
+        }
 
-                    Log.e(detailActivity.getPackageName(),"Palette save failed");
+        @Override
+        protected Boolean doInBackground(String... params) {
 
-                    detailActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+            ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
 
-                            Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
+            List<ImageView> cells = new ArrayList<>();
 
-                            failed.show();
-                        }
-                    });
+            try {
 
-                } finally{
-                    detailActivity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progDiag.dismiss();
-                        }
-                    });
-                }
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell1));
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell2));
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell3));
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell4));
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell5));
+                cells.add((ImageView) detailActivity.findViewById(R.id.cell6));
+
+                Uri imageUri = Uri.parse(detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_URI));
+
+                imgView.setImageURI(imageUri);
+
+                Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
+
+                Palette palette = Palette.generate(bitmap);
+
+                cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
+                cells.get(1).setBackgroundColor(palette.getLightVibrantColor(0));
+                cells.get(2).setBackgroundColor(palette.getDarkVibrantColor(0));
+                cells.get(3).setBackgroundColor(palette.getMutedColor(0));
+                cells.get(4).setBackgroundColor(palette.getLightMutedColor(0));
+                cells.get(5).setBackgroundColor(palette.getDarkMutedColor(0));
+
+            } catch(Exception ex){
+
+                Log.e(detailActivity.getPackageName(),"Load palette failed",ex);
+
+                return false;
 
             }
-        };
 
-        saveThread.start();
+            return true;
+        }
 
+        @Override
+        protected void onPostExecute(Boolean result) {
+
+            if(!result){
+
+                Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
+                failed.show();
+            }
+
+            progDiag.dismiss();
+
+        }
+    }
+
+    private class SaveTask extends AsyncTask<String, Boolean, Boolean> {
+
+        private ProgressDialog progDiag;
+        private DetailActivity detailActivity;
+
+        String imageName;
+        String fileName;
+        String filePath;
+
+        @Override
+        protected void onPreExecute() {
+
+            super.onPreExecute();
+
+            detailActivity = weakDetailActivity.get();
+
+            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
+
+
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+
+            View detailRoot = findViewById(R.id.detailRoot);
+
+            detailRoot.setDrawingCacheEnabled(true);
+
+            Bitmap bitMap = detailRoot.getDrawingCache();
+
+            imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+            fileName = "/palette_" + imageName + ".png";
+            filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + fileName;
+
+            try {
+
+                File imageFile = new File(filePath);
+
+                if (imageFile.exists()) {
+                    if(imageFile.delete()){
+                        Log.i(detailActivity.getPackageName(),"File " + filePath + "overwritten");
+                    }
+                }
+
+                FileOutputStream fos = new FileOutputStream(imageFile);
+                bitMap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+                fos.flush();
+                fos.close();
+
+                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+
+                Uri contentUri = Uri.fromFile(imageFile);
+                mediaScanIntent.setData(contentUri);
+
+                detailActivity.sendBroadcast(mediaScanIntent);
+
+
+            } catch (IOException ioe) {
+
+                Log.e(detailActivity.getPackageName(),"Palette save failed");
+
+                return false;
+
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+
+            if(result){
+
+                Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + fileName, Toast.LENGTH_LONG);
+                confirm.show();
+
+            } else {
+
+                Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
+                failed.show();
+
+            }
+
+            progDiag.dismiss();
+
+        }
     }
 }
