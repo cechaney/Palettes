@@ -6,11 +6,13 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.Menu;
@@ -30,7 +32,18 @@ import java.util.List;
 
 public class DetailActivity extends Activity {
 
+    private static final String LOG_TAG = "Palettes.DetailActivity";
+
     private final WeakReference<DetailActivity> weakDetailActivity;
+
+    private Uri imageUri;
+    private String imageName;
+
+    private ProgressDialog progDiag;
+
+    List<ImageView> cells = new ArrayList<>();
+
+    LinearLayout detailRoot;
 
     public DetailActivity() {
         this.weakDetailActivity = new WeakReference<>(this);
@@ -61,7 +74,19 @@ public class DetailActivity extends Activity {
             }
         }
 
-        new LoadTask().execute();
+        imageUri = Uri.parse(this.getIntent().getStringExtra(EXTRAS.IMAGE_URI));
+
+        new LoadTask().execute(imageUri);
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if(progDiag != null && progDiag.isShowing()){
+            progDiag.dismiss();
+        }
 
     }
 
@@ -76,7 +101,6 @@ public class DetailActivity extends Activity {
         }
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -96,35 +120,58 @@ public class DetailActivity extends Activity {
 
     private void savePalette() {
 
-        new SaveTask().execute();
+        imageName = this.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+
+        new SaveTask().execute(imageName);
 
     }
 
-    private class LoadTask extends AsyncTask<String, Boolean, Boolean> {
-
-        private ProgressDialog progDiag;
-        private DetailActivity detailActivity;
+    private class LoadTask extends AsyncTask<Uri, Palette, Palette> {
 
         @Override
         protected void onPreExecute() {
 
             super.onPreExecute();
 
-            detailActivity = weakDetailActivity.get();
-
-            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
-
+            progDiag = ProgressDialog.show(weakDetailActivity.get(), "Palettes", "Loading palette...", true, true);
 
         }
 
         @Override
-        protected Boolean doInBackground(String... params) {
+        protected Palette doInBackground(Uri... params) {
 
-            ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
-
-            List<ImageView> cells = new ArrayList<>();
+            Palette palette = null;
 
             try {
+
+                Uri imageUri = params[0];
+
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),imageUri);
+
+                palette = Palette.generate(bitmap);
+
+            } catch(Exception ex){
+
+                Log.e(LOG_TAG,"Load palette failed",ex);
+
+            }
+
+            return palette;
+
+        }
+
+        @Override
+        protected void onPostExecute(Palette palette) {
+
+            DetailActivity detailActivity = weakDetailActivity.get();
+
+            if(detailActivity != null){
+
+                ImageView imgView = (ImageView) detailActivity.findViewById(R.id.imgView);
+
+                imgView.setImageURI(imageUri);
+
+                cells = new ArrayList<>();
 
                 cells.add((ImageView) detailActivity.findViewById(R.id.cell1));
                 cells.add((ImageView) detailActivity.findViewById(R.id.cell2));
@@ -133,14 +180,6 @@ public class DetailActivity extends Activity {
                 cells.add((ImageView) detailActivity.findViewById(R.id.cell5));
                 cells.add((ImageView) detailActivity.findViewById(R.id.cell6));
 
-                Uri imageUri = Uri.parse(detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_URI));
-
-                imgView.setImageURI(imageUri);
-
-                Bitmap bitmap = ((BitmapDrawable) imgView.getDrawable()).getBitmap();
-
-                Palette palette = Palette.generate(bitmap);
-
                 cells.get(0).setBackgroundColor(palette.getVibrantColor(0));
                 cells.get(1).setBackgroundColor(palette.getLightVibrantColor(0));
                 cells.get(2).setBackgroundColor(palette.getDarkVibrantColor(0));
@@ -148,62 +187,50 @@ public class DetailActivity extends Activity {
                 cells.get(4).setBackgroundColor(palette.getLightMutedColor(0));
                 cells.get(5).setBackgroundColor(palette.getDarkMutedColor(0));
 
-            } catch(Exception ex){
-
-                Log.e(detailActivity.getPackageName(),"Load palette failed",ex);
-
-                return false;
-
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-
-            if(!result){
+            } else {
 
                 Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
+
                 failed.show();
+
             }
 
-            progDiag.dismiss();
+            if(progDiag != null && progDiag.isShowing()){
+                progDiag.dismiss();
+            }
 
         }
     }
 
     private class SaveTask extends AsyncTask<String, Boolean, Boolean> {
 
-        private ProgressDialog progDiag;
-        private DetailActivity detailActivity;
+        View detailRoot;
 
         String imageName;
         String fileName;
         String filePath;
+
+        Uri contentUri;
 
         @Override
         protected void onPreExecute() {
 
             super.onPreExecute();
 
-            detailActivity = weakDetailActivity.get();
+            progDiag = ProgressDialog.show(weakDetailActivity.get(), "Palettes", "Saving palette...", true, true);
 
-            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
-
+            detailRoot = findViewById(R.id.detailRoot);
 
         }
 
         @Override
         protected Boolean doInBackground(String... params) {
 
-            View detailRoot = findViewById(R.id.detailRoot);
-
             detailRoot.setDrawingCacheEnabled(true);
 
             Bitmap bitMap = detailRoot.getDrawingCache();
 
-            imageName = detailActivity.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+            imageName = params[0];
             fileName = "/palette_" + imageName + ".png";
             filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + fileName;
 
@@ -213,7 +240,7 @@ public class DetailActivity extends Activity {
 
                 if (imageFile.exists()) {
                     if(imageFile.delete()){
-                        Log.i(detailActivity.getPackageName(),"File " + filePath + "overwritten");
+                        Log.i(LOG_TAG,"File " + filePath + "overwritten");
                     }
                 }
 
@@ -223,17 +250,12 @@ public class DetailActivity extends Activity {
                 fos.flush();
                 fos.close();
 
-                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-
-                Uri contentUri = Uri.fromFile(imageFile);
-                mediaScanIntent.setData(contentUri);
-
-                detailActivity.sendBroadcast(mediaScanIntent);
+                contentUri = Uri.fromFile(imageFile);
 
 
             } catch (IOException ioe) {
 
-                Log.e(detailActivity.getPackageName(),"Palette save failed");
+                Log.e(LOG_TAG,"Palette save failed");
 
                 return false;
 
@@ -247,17 +269,25 @@ public class DetailActivity extends Activity {
 
             if(result){
 
-                Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + fileName, Toast.LENGTH_LONG);
+                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+
+                mediaScanIntent.setData(contentUri);
+
+                weakDetailActivity.get().sendBroadcast(mediaScanIntent);
+
+                Toast confirm = Toast.makeText(weakDetailActivity.get(), "Palette Saved: " + fileName, Toast.LENGTH_LONG);
                 confirm.show();
 
             } else {
 
-                Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
+                Toast failed = Toast.makeText(weakDetailActivity.get(), "Palette save failed ", Toast.LENGTH_LONG);
                 failed.show();
 
             }
 
-            progDiag.dismiss();
+            if(progDiag != null && progDiag.isShowing()){
+                progDiag.dismiss();
+            }
 
         }
     }
