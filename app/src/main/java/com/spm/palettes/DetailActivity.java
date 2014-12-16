@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -97,6 +98,25 @@ public class DetailActivity extends Activity {
 
     }
 
+    private void lockOrientation(){
+
+        Configuration config = this.getResources().getConfiguration();
+
+        if(config != null){
+
+            if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            } else if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
+
+        }
+    }
+
+    private void unlockOrientation(){
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
@@ -133,6 +153,9 @@ public class DetailActivity extends Activity {
             detailActivity = weakDetailActivity.get();
 
             if(detailActivity != null) {
+
+                lockOrientation();
+
                 progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
             }
             else{
@@ -182,10 +205,12 @@ public class DetailActivity extends Activity {
                     failed.show();
                 }
 
-            }
+                if(progDiag != null && progDiag.isShowing()){
+                    progDiag.dismiss();
+                }
 
-            if(progDiag != null && progDiag.isShowing()){
-                progDiag.dismiss();
+                unlockOrientation();
+
             }
 
         }
@@ -206,7 +231,11 @@ public class DetailActivity extends Activity {
             detailActivity = weakDetailActivity.get();
 
             if(detailActivity != null) {
+
+                lockOrientation();
+
                 progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
+
             } else {
                 cancel(true);
             }
@@ -280,6 +309,8 @@ public class DetailActivity extends Activity {
                     failed.show();
 
                 }
+
+                unlockOrientation();
 
             }
 
