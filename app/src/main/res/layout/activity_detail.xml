@@ -51,7 +51,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@color/white"/>
+                android:background="@color/black"/>
 
             <ImageView
                 android:id="@+id/cell3"
@@ -74,7 +74,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@color/white"/>
+                android:background="@color/black"/>
 
             <ImageView
                 android:id="@+id/cell5"
@@ -88,7 +88,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@color/white"/>
+                android:background="@color/black"/>
 
         </LinearLayout>
 
