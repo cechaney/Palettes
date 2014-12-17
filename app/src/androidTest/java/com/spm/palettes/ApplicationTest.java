@@ -33,6 +33,7 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         super.tearDown();
     }
 
+    @SuppressWarnings("unused")
     @SmallTest
     public void permsCheck() {
 
