@@ -68,7 +68,7 @@ public class DetailActivity extends Activity {
 
         ImageView imgView = (ImageView) this.findViewById(R.id.imgView);
 
-        Uri imageUri = Uri.parse(this.getIntent().getStringExtra(EXTRAS.IMAGE_URI));
+        Uri imageUri = Uri.parse(this.getIntent().getStringExtra(PaletteExtras.IMAGE_URI));
 
         imgView.setImageURI(imageUri);
 
@@ -135,7 +135,7 @@ public class DetailActivity extends Activity {
 
     private void savePalette() {
 
-        String imageName = this.getIntent().getStringExtra(EXTRAS.IMAGE_NAME);
+        String imageName = this.getIntent().getStringExtra(PaletteExtras.IMAGE_NAME);
 
         new SaveTask().execute(imageName);
 

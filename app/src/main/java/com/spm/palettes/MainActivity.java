@@ -27,18 +27,12 @@ public class MainActivity extends Activity {
     private Uri capImageUri;
     private String capImageName;
 
-    private LinearLayout mainRoot;
-
-    private ImageButton galleryButton;
-    private ImageButton cameraButton;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mainRoot = (LinearLayout) findViewById(R.id.mainRoot);
+        LinearLayout mainRoot = (LinearLayout) findViewById(R.id.mainRoot);
 
         Configuration config = this.getResources().getConfiguration();
 
@@ -48,8 +42,7 @@ public class MainActivity extends Activity {
             mainRoot.setOrientation(LinearLayout.VERTICAL);
         }
 
-        galleryButton = (ImageButton) findViewById(R.id.galleryButton);
-        cameraButton = (ImageButton) findViewById(R.id.cameraButton);
+        ImageButton cameraButton = (ImageButton) findViewById(R.id.cameraButton);
 
         if (!this.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
             cameraButton.setVisibility(View.GONE);
@@ -92,8 +85,8 @@ public class MainActivity extends Activity {
 
                     Intent detail = new Intent(this, DetailActivity.class);
 
-                    detail.putExtra(EXTRAS.IMAGE_URI, imageUri.toString());
-                    detail.putExtra(EXTRAS.IMAGE_NAME, capImageName);
+                    detail.putExtra(PaletteExtras.IMAGE_URI, imageUri.toString());
+                    detail.putExtra(PaletteExtras.IMAGE_NAME, capImageName);
 
                     startActivity(detail);
                 }
@@ -115,8 +108,8 @@ public class MainActivity extends Activity {
 
                     //Show the detail activity
                     Intent detail = new Intent(this, DetailActivity.class);
-                    detail.putExtra(EXTRAS.IMAGE_URI, capImageUri.toString());
-                    detail.putExtra(EXTRAS.IMAGE_NAME, capImageName);
+                    detail.putExtra(PaletteExtras.IMAGE_URI, capImageUri.toString());
+                    detail.putExtra(PaletteExtras.IMAGE_NAME, capImageName);
                     startActivity(detail);
                 }
 
