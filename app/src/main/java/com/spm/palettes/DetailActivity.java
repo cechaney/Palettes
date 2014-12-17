@@ -310,13 +310,12 @@ public class DetailActivity extends Activity {
 
                 }
 
+                if(progDiag != null && progDiag.isShowing()){
+                    progDiag.dismiss();
+                }
+
                 unlockOrientation();
 
-            }
-
-
-            if(progDiag != null && progDiag.isShowing()){
-                progDiag.dismiss();
             }
 
         }
