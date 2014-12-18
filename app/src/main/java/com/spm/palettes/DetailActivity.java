@@ -24,20 +24,13 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 
 
 public class DetailActivity extends Activity {
 
     private static final String LOG_TAG = "Palettes.DetailActivity";
 
-    private final WeakReference<DetailActivity> weakDetailActivity;
-
     private ProgressDialog progDiag;
-
-    public DetailActivity() {
-        this.weakDetailActivity = new WeakReference<>(this);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,24 +136,18 @@ public class DetailActivity extends Activity {
 
     private class LoadTask extends AsyncTask<Uri, Palette, Palette> {
 
-        private DetailActivity detailActivity;
+        private DetailActivity detailActivity = DetailActivity.this;
 
         @Override
         protected void onPreExecute() {
 
             super.onPreExecute();
 
-            detailActivity = weakDetailActivity.get();
+            //Must lock orientation to stop from loosing reference to the activity UI thread
+            lockOrientation();
 
-            if(detailActivity != null) {
+            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
 
-                lockOrientation();
-
-                progDiag = ProgressDialog.show(detailActivity, "Palettes", "Loading palette...", true, true);
-            }
-            else{
-                cancel(true);
-            }
 
         }
 
@@ -188,37 +175,34 @@ public class DetailActivity extends Activity {
         @Override
         protected void onPostExecute(Palette palette) {
 
-            if(detailActivity != null){
 
-                if(palette != null) {
+            if(palette != null) {
 
-                    detailActivity.findViewById(R.id.cell1).setBackgroundColor(palette.getVibrantColor(0));
-                    detailActivity.findViewById(R.id.cell2).setBackgroundColor(palette.getLightVibrantColor(0));
-                    detailActivity.findViewById(R.id.cell3).setBackgroundColor(palette.getDarkVibrantColor(0));
-                    detailActivity.findViewById(R.id.cell4).setBackgroundColor(palette.getMutedColor(0));
-                    detailActivity.findViewById(R.id.cell5).setBackgroundColor(palette.getLightMutedColor(0));
-                    detailActivity.findViewById(R.id.cell6).setBackgroundColor(palette.getDarkMutedColor(0));
-                } else {
+                detailActivity.findViewById(R.id.cell1).setBackgroundColor(palette.getVibrantColor(0));
+                detailActivity.findViewById(R.id.cell2).setBackgroundColor(palette.getLightVibrantColor(0));
+                detailActivity.findViewById(R.id.cell3).setBackgroundColor(palette.getDarkVibrantColor(0));
+                detailActivity.findViewById(R.id.cell4).setBackgroundColor(palette.getMutedColor(0));
+                detailActivity.findViewById(R.id.cell5).setBackgroundColor(palette.getLightMutedColor(0));
+                detailActivity.findViewById(R.id.cell6).setBackgroundColor(palette.getDarkMutedColor(0));
+            } else {
 
-                    Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
+                Toast failed = Toast.makeText(detailActivity, "Palette load failed ", Toast.LENGTH_LONG);
 
-                    failed.show();
-                }
-
-                if(progDiag != null && progDiag.isShowing()){
-                    progDiag.dismiss();
-                }
-
-                unlockOrientation();
-
+                failed.show();
             }
+
+            if(progDiag != null && progDiag.isShowing()){
+                progDiag.dismiss();
+            }
+
+            unlockOrientation();
 
         }
     }
 
     private class SaveTask extends AsyncTask<String, Integer, Boolean> {
 
-        private DetailActivity detailActivity;
+        private DetailActivity detailActivity = DetailActivity.this;
 
         private String fileName;
         private Uri contentUri;
@@ -228,17 +212,10 @@ public class DetailActivity extends Activity {
 
             super.onPreExecute();
 
-            detailActivity = weakDetailActivity.get();
+            lockOrientation();
 
-            if(detailActivity != null) {
+            progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
 
-                lockOrientation();
-
-                progDiag = ProgressDialog.show(detailActivity, "Palettes", "Saving palette...", true, true);
-
-            } else {
-                cancel(true);
-            }
 
         }
 
@@ -290,33 +267,29 @@ public class DetailActivity extends Activity {
         @Override
         protected void onPostExecute(Boolean result) {
 
-            if(detailActivity != null) {
+            if(result){
 
-                if(result){
+                Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
 
-                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                mediaScanIntent.setData(contentUri);
 
-                    mediaScanIntent.setData(contentUri);
+                detailActivity.sendBroadcast(mediaScanIntent);
 
-                    detailActivity.sendBroadcast(mediaScanIntent);
+                Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + fileName, Toast.LENGTH_LONG);
+                confirm.show();
 
-                    Toast confirm = Toast.makeText(detailActivity, "Palette Saved: " + fileName, Toast.LENGTH_LONG);
-                    confirm.show();
+            } else {
 
-                } else {
-
-                    Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
-                    failed.show();
-
-                }
-
-                if(progDiag != null && progDiag.isShowing()){
-                    progDiag.dismiss();
-                }
-
-                unlockOrientation();
+                Toast failed = Toast.makeText(detailActivity, "Palette save failed ", Toast.LENGTH_LONG);
+                failed.show();
 
             }
+
+            if(progDiag != null && progDiag.isShowing()){
+                progDiag.dismiss();
+            }
+
+            unlockOrientation();
 
         }
     }
